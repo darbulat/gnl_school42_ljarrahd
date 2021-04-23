@@ -1,24 +1,5 @@
 #include "get_next_line.h"
 
-static void	read_line(int fd, int *ret, char **end_line)
-{
-	char	buffer[BUFFER_SIZE + 1];
-	char	*tmp;
-
-	while (!ft_strchr(*end_line, '\n') && *ret > 0)
-	{
-		*ret = (int)read(fd, buffer, BUFFER_SIZE);
-		buffer[*ret] = 0;
-		tmp = ft_strjoin(*end_line, buffer);
-		if (*end_line)
-		{
-			free(*end_line);
-			*end_line = NULL;
-		}
-		*end_line = tmp;
-	}
-}
-
 static int	ft_memdel(void **ptr)
 {
 	if (*ptr)
@@ -30,33 +11,28 @@ static int	ft_memdel(void **ptr)
 	return (0);
 }
 
-int	get_next_line(int fd, char **line)
+static void	read_line(int fd, int *ret, char **end_line)
 {
-	static char	*end_line;
-	char		*tmp;
-	int			ret;
+	char	buffer[BUFFER_SIZE + 1];
+	char	*tmp;
 
-	if (fd < 0 || !line || BUFFER_SIZE < 1)
-		return (-1);
-	if (!end_line)
-		end_line = ft_calloc(1, sizeof(*end_line));
-	ret = 1;
-	read_line(fd, &ret, &end_line);
-	if (ret == 0)
+	while (!ft_strchr(*end_line, '\n') && *ret > 0)
 	{
-		*line = ft_strdup(end_line);
-		ft_memdel((void **)&end_line);
-		return (0);
+		*ret = (int)read(fd, buffer, BUFFER_SIZE);
+		if (*ret < 0)
+		{
+			ft_memdel((void **)end_line);
+			return ;
+		}
+		buffer[*ret] = 0;
+		tmp = ft_strjoin(*end_line, buffer);
+		if (*end_line)
+		{
+			free(*end_line);
+			*end_line = NULL;
+		}
+		*end_line = tmp;
 	}
-	if (ret > 0)
-	{
-		*line = ft_substr(end_line, 0, (ft_strchr(end_line, '\n') - end_line));
-		tmp = ft_strdup(end_line + ft_strlen(*line) + 1);
-		free(end_line);
-		end_line = tmp;
-		return (1);
-	}
-	return (-1);
 }
 
 char	*ft_strdup(const char *s)
@@ -96,4 +72,33 @@ char	*ft_substr(char const *s, unsigned int start, size_t len)
 	}
 	str[i] = 0;
 	return (str);
+}
+
+int	get_next_line(int fd, char **line)
+{
+	static char	*end_line;
+	char		*tmp;
+	int			ret;
+
+	if (fd < 0 || !line || BUFFER_SIZE < 1)
+		return (-1);
+	if (!end_line)
+		end_line = ft_calloc(1, sizeof(*end_line));
+	ret = 1;
+	read_line(fd, &ret, &end_line);
+	if (ret == 0)
+	{
+		*line = ft_strdup(end_line);
+		ft_memdel((void **)&end_line);
+		return (0);
+	}
+	if (ret > 0)
+	{
+		*line = ft_substr(end_line, 0, (ft_strchr(end_line, '\n') - end_line));
+		tmp = ft_strdup(end_line + ft_strlen(*line) + 1);
+		free(end_line);
+		end_line = tmp;
+		return (1);
+	}
+	return (-1);
 }

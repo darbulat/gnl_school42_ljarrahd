@@ -19,6 +19,17 @@ static void	read_line(int fd, int *ret, char **end_line)
 	}
 }
 
+static int	ft_memdel(void **ptr)
+{
+	if (*ptr)
+	{
+		free(*ptr);
+		*ptr = NULL;
+		return (1);
+	}
+	return (0);
+}
+
 int	get_next_line(int fd, char **line)
 {
 	static char	*end_line;
@@ -34,8 +45,7 @@ int	get_next_line(int fd, char **line)
 	if (ret == 0)
 	{
 		*line = ft_strdup(end_line);
-		free(end_line);
-		end_line = NULL;
+		ft_memdel((void **)&end_line);
 		return (0);
 	}
 	if (ret > 0)
